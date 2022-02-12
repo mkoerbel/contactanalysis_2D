@@ -12,13 +12,12 @@ Please cite this reference when using all or part of this analysis.
 
 Python 3 installation needed. In addition the packages (tested with the versions in brackets)
 
-- numpy (1.18.4) 
-- pandas (1.0.3)
-- matplotlib (3.2.1)
-- scipy (1.4.1)
-- skimage (scikit-image)
-- tk (8.6.10)
-- seaborn
+- numpy (1.21.4) 
+- pandas (1.3.4)
+- matplotlib (3.5.0)
+- scipy (1.7.3)
+- skimage (scikit-image 0.18.3)
+- seaborn (0.11.2)
 
 Included files:
 
