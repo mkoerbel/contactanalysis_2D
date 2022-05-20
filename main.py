@@ -38,7 +38,8 @@ INPUT
             Analyse the segmented regions, detect signaling event and output information for each cell. 
         3) plotting
             Takes the "analysis" output, restructures it for easier visualisation and adds some additional interaction features. 
-
+      Always the latest saved output will be used in subsequent runs.
+      
 OUTPUT
     - various tif stacks of the filtered and segmented channels. 
     - .csv files for a time-independent cell cummary ("*_cell_summary_plot.csv"), a time-dependent cell summary ("*_cell_results_plot.csv"), and a time-dependent contact summary ("*_contact_results_plot.csv")
@@ -143,6 +144,9 @@ for i_folder in folders:        # one folder is one condition
 
             analysis_parameters = [cell_radius, min_gradient, trace_smoothing, time_interval, min_height, min_width, pixel_size, max_speed, min_track_length, tmin_noCa]
             cell_summary, cell_results, contact_results = CA2D_analysis(i_file, cell_summary, cell_results, contact_results, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_raw[:,:,:,channel['calcium']], image_CCZ_corr, analysis_parameters)
+            contact_results.to_csv(dirname + '/contact_results.csv')
+            cell_results.to_csv(dirname + '/cell_results.csv')
+            cell_summary.to_csv(dirname + '/cell_summary.csv')
             contact_results.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_contact_results.csv')
             cell_results.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_results.csv')
             cell_summary.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_summary.csv')
@@ -166,6 +170,9 @@ for i_folder in folders:        # one folder is one condition
             cell_summary_plot = cell_summary_plot.append(cell_summary_plot_t)
             cell_results_plot = cell_results_plot.append(cell_results_plot_t)
             contact_results_plot = contact_results_plot.append(contact_results_plot_t)
+        cell_summary_plot.to_csv(dirname + '/cell_summary_plot.csv')
+        cell_results_plot.to_csv(dirname + '/cell_results_plot.csv')
+        contact_results_plot.to_csv(dirname + '/contact_results_plot.csv')
         cell_summary_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_summary_plot.csv')
         cell_results_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_results_plot.csv')
         contact_results_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_contact_results_plot.csv')

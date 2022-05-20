@@ -26,10 +26,11 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
     #assign unique cell numbering
     cell_IDs = np.arange(len(cell_summary))+1
     cell_summary['cell_ID'] = cell_IDs
-    condlist = [(cell_results['cell'] == cell_summary['cell'][i]) & (cell_results['file'] == cell_summary['file'][i]) for i in range(len(cell_summary))]
-    choicelist = [cell_summary['cell_ID'][i] for i in range(len(cell_summary))]
+    # condlist = [(cell_results['cell'] == cell_summary['cell'][i]) & (cell_results['file'] == cell_summary['file'][i]) for i in range(len(cell_summary))]
+    condlist = [(cell_results['cell'] == cell_summary.loc[i, 'cell']) & (cell_results['file'] == cell_summary.loc[i, 'file']) for i in range(len(cell_summary))]
+    choicelist = [cell_summary.loc[i, 'cell_ID'] for i in range(len(cell_summary))]
     cell_results['cell_ID'] = np.select(condlist, choicelist)
-    condlist = [(contact_results['cell'] == cell_summary['cell'][i]) & (contact_results['file'] == cell_summary['file'][i]) for i in range(len(cell_summary))]
+    condlist = [(contact_results['cell'] == cell_summary.loc[i, 'cell']) & (contact_results['file'] == cell_summary.loc[i, 'file']) for i in range(len(cell_summary))]
     contact_results['cell_ID'] = np.select(condlist, choicelist)
 
     cell_summary_good = cell_summary[(cell_summary['QC'] == QC)].copy()
@@ -50,21 +51,18 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
         cell_results_good.loc[selector, 'CCZ_area_cnt_smooth']          = cell_results_good.loc[selector, 'CCZ_area_cnt'].rolling(frame_smooth, center=True).mean()
         cell_results_good.loc[selector, 'CZ_area_smooth_change [um2s-1]']  = cell_results_good.loc[selector, 'CZ_area_total_smooth [um2]'].diff() / time_interval
         cell_results_good.loc[selector, 'CCZ_area_smooth_change [um2s-1]'] = cell_results_good.loc[selector, 'CCZ_area_total_smooth [um2]'].diff() / time_interval
-
         i_res = cell_results_good[cell_results_good['cell_ID'] == df.cell_ID]
         # create DataFrame for begin and max timepoints
         CZ_smooth_max = i_res[i_res['CZ_area_total_smooth [um2]'] == np.amax(i_res['CZ_area_total_smooth [um2]'])].iloc[0]
         CCZ_smooth_max = i_res[i_res['CCZ_area_total_smooth [um2]'] == np.amax(i_res['CCZ_area_total_smooth [um2]'])].iloc[0]
-
         if CCZ_smooth_max['CCZ_area_cnt'] > 1:
             CCZ_smooth_begin = i_res[i_res['CCZ_area_cnt_smooth'] >= 1].iloc[0]
-
             # calculate CCZ growth rate
             CCZ_duration = CCZ_smooth_max['time [s]'] - CCZ_smooth_begin['time [s]']
             CCZ_growth = CCZ_smooth_max['CCZ_area_total_smooth [um2]'] - CCZ_smooth_begin['CCZ_area_total_smooth [um2]']
             CCZ_rate = CCZ_growth/CCZ_duration
             CCZ_max_rate = np.amax(i_res['CCZ_area_total_smooth [um2]'].diff()) / time_interval
-            subwindow = i_res[(i_res['time [s]'] >= CCZ_smooth_begin['time [s]']) & (i_res['time [s]'] <= CCZ_smooth_max['time [s]'])]
+            subwindow = i_res[(i_res['time [s]'] >= CCZ_smooth_begin['time [s]']) & (i_res['time [s]'] <= CCZ_smooth_max['time [s]'])].copy()
             subwindow.loc[:,'lin_fit'] = subwindow['CCZ_area_total_smooth [um2]'].iloc[0] + np.arange(len(subwindow)) * CCZ_rate
             linearity = ((subwindow['lin_fit'] - subwindow['CCZ_area_total_smooth [um2]']) ** 2).mean() ** 0.5
         else:
@@ -74,7 +72,6 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
             CCZ_rate = -1
             CCZ_max_rate = -1
             linearity = -1
-
         # calculate timings for interaction stages
         cell_results_good.loc[selector, 'time_to_CZ_max [s]']   = cell_results_good.loc[selector, 'time_to_Ca [s]'] - CZ_smooth_max['time_to_Ca [s]']
 
@@ -92,13 +89,11 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
         cell_summary_good.loc[cell_summary_good['cell_ID']==df['cell_ID'], 'CCZ_rate [um2s-1]'] = CCZ_rate
         cell_summary_good.loc[cell_summary_good['cell_ID']==df['cell_ID'], 'CCZ_max_rate [um2s-1]'] = CCZ_max_rate
         cell_summary_good.loc[cell_summary_good['cell_ID']==df['cell_ID'], 'growth_linearity_rmsd'] = linearity
-        
         # add time references to all_contacts
         contact_results_good.loc[contact_results_good['cell_ID'] == df.cell_ID, 'time_to_CCZ_first [s]'] = contact_results_good.loc[contact_results_good['cell_ID'] == df.cell_ID, 'time_to_Ca [s]'] + cell_summary_good.loc[cell_summary_good['cell_ID']==df['cell_ID'], 'time_length_stage_2 [s]'].iloc[0]
         contact_results_good.loc[contact_results_good['cell_ID'] == df.cell_ID, 'speed [ums-1]'] = np.sqrt(contact_results_good.loc[contact_results_good['cell_ID'] == df.cell_ID, 'x-displ [um]'] ** 2 + contact_results_good.loc[contact_results_good['cell_ID'] == df.cell_ID, 'y-displ [um]'] ** 2)/time_interval
 
-        contact_results_good['radius [um]'] = np.sqrt(contact_results_good['area [um2]']/np.pi)
-
+        contact_results_good.loc[:,'radius [um]'] = np.sqrt(contact_results_good['area [um2]']/np.pi)
 
         # calculate centripedality
         def cosT(v1, v2):
@@ -114,7 +109,8 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
                     score.append(cosT(displ, c2c))
                 #else:
                 #    print(i_contacts.cell_ID)
-            cell_results_good.loc[(cell_results_good['cell_ID'] == df.cell_ID) & (cell_results_good['frame'] == i_frame), 'centripedality'] = np.median(score)
+            if len(score) > 0:
+                cell_results_good.loc[(cell_results_good['cell_ID'] == df.cell_ID) & (cell_results_good['frame'] == i_frame), 'centripedality'] = np.median(score)
 
     condlist = [
         (cell_results_good['time_to_CCZ_first [s]'] < 0),
@@ -122,7 +118,7 @@ def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth,
         (cell_results_good['QC'] >= 'good') & (cell_results_good['time_to_Ca [s]'] >= 0) & (cell_results_good['time_to_CZ_max [s]'] < 0), 
         (cell_results_good['QC'] >= 'good') & (cell_results_good['time_to_CZ_max [s]'] >= 0)]
     choicelist = ['scanning', 'searching', 'spreading', 'synapsing']
-    cell_results_good['stage'] = np.select(condlist, choicelist)
+    cell_results_good.loc[:,'stage'] = np.select(condlist, choicelist)
     return cell_summary_good, cell_results_good, contact_results_good
 
 
