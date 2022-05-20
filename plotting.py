@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import signal
 
-def plotting(cell_results, cell_summary, contact_results, QC, frame_smooth, pixel_size):
+def CA2D_plotting(cell_results, cell_summary, contact_results, QC, frame_smooth, pixel_size):
     """
     Takes analysed segmented data from contactanalysis and extracts parameters for plotting and comparison between conditions.
     Input:  cell_results: DataFrame for one condition
@@ -126,7 +126,7 @@ def plotting(cell_results, cell_summary, contact_results, QC, frame_smooth, pixe
     return cell_summary_good, cell_results_good, contact_results_good
 
 
-def plot_Ca_traces(summary, results, s_filter):
+def CA2D_plot_Ca_traces(summary, results, s_filter):
     """
     Take triggering and non-triggering cells and make Ca-trace and total CZ area plot
     Input: cell_summary, cell_results, and s_filter: number of timepoints to use for smoothing. 

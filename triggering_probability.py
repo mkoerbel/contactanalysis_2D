@@ -34,7 +34,7 @@ OUTPUT
 # Input Settings
 feature = 'radius [um]' # choose between 'radius [um]' and 'contact_time [s]' as the x-axis
 bins = [0,2000, 50] # either contact radius in nm OR contact time in s (depends on chosen feature), [start, end, bin_width]
-
+date = '20220520' # Date to use input data from. 'YYYYMMDD'
 
 
 ###########################################
@@ -46,9 +46,6 @@ import pandas as pd
 import tkinter as tk
 from tkinter import Tk, Frame, Scrollbar, Listbox, Button, filedialog, Checkbutton, Label
 import os
-
-# Custom functions
-from gui import get_filenames
 
 def contactanalysisGui():
     gui_list = []
@@ -101,10 +98,10 @@ def contactanalysisGui():
     btn_start.pack(side = tk.RIGHT, pady = 5, padx = 5)
     check_segment = Checkbutton(frame2, text = 'Triggering Probability', variable = b_trigprob, font =('Calibri', 10))
     check_segment.pack(side = tk.LEFT, padx=5)
-    check_cell = Checkbutton(frame2, text = 'TBD', variable = b_analysis_cell, font =('Calibri', 10))
-    check_cell.pack(side = tk.LEFT, padx=5)
-    check_contact = Checkbutton(frame2, text = 'TBD', variable = b_analysis_contact, font =('Calibri', 10))
-    check_contact.pack(side = tk.LEFT, padx=5)
+    #check_cell = Checkbutton(frame2, text = 'TBD', variable = b_analysis_cell, font =('Calibri', 10))
+    #check_cell.pack(side = tk.LEFT, padx=5)
+    #check_contact = Checkbutton(frame2, text = 'TBD', variable = b_analysis_contact, font =('Calibri', 10))
+    #check_contact.pack(side = tk.LEFT, padx=5)
     window.mainloop()
 
     return gui_list[0], plots
@@ -131,15 +128,15 @@ def contact_probability(summary, results, contacts, bins, feature):
 
     # prepare sampling interval size
     bin_width = bins[2]
-    n_bins = np.int(np.ceil(bins[1]/bin_width))
+    n_bins = int(np.ceil(bins[1]/bin_width))
     # bin bounds
     end_bins = np.arange(bin_width,bin_width*(n_bins+1), bin_width)
     # prepare arrays
     # two counts will be made, for each assumption. r (contact radius), t (contact time)
-    activated_counts_r = np.zeros(n_bins, dtype=np.int)
-    activated_counts_t = np.zeros(n_bins, dtype=np.int)
-    total_counts_r = np.zeros(n_bins, dtype=np.int)
-    total_counts_t = np.zeros(n_bins, dtype=np.int)
+    activated_counts_r = np.zeros(n_bins, dtype=int)
+    activated_counts_t = np.zeros(n_bins, dtype=int)
+    total_counts_r = np.zeros(n_bins, dtype=int)
+    total_counts_t = np.zeros(n_bins, dtype=int)
     n_cells = len(summary.cell_ID)
 
     for i, cell in summary.iterrows():
@@ -188,9 +185,9 @@ for dirname in folders:        # dirname of inmput folder. One folder is one con
     print(' Plotting condition ' + str(condition))
 
     if plots['triggering_probability']:
-        cell_summary_plot = pd.read_csv(dirname + '/cell_summary_plot.csv')
-        cell_results_plot = pd.read_csv(dirname + '/cell_results_plot.csv')
-        contact_results_plot = pd.read_csv(dirname + '/contact_results_plot.csv')
+        cell_summary_plot = pd.read_csv(dirname + '/' + date + '_cell_summary_plot.csv')
+        cell_results_plot = pd.read_csv(dirname + '/' + date + '_cell_results_plot.csv')
+        contact_results_plot = pd.read_csv(dirname + '/' + date + '_contact_results_plot.csv')
 
         end_bins, activated_counts_r, activated_counts_t, total_counts_r, total_counts_t = contact_probability(cell_summary_plot, cell_results_plot, contact_results_plot, bins, feature)
 
@@ -203,7 +200,7 @@ for dirname in folders:        # dirname of inmput folder. One folder is one con
                 'ncells_max_t': total_counts_t,
                 'probability_max_r': activated_counts_r/total_counts_r,
                 'probability_max_t': activated_counts_t/total_counts_t})
-            output.to_csv(dirname + '\contact_probability_max_r.csv')
+            output.to_csv(dirname + '/' + date + '_contact_probability_max_r.csv')
         elif feature == 'contact_time [s]':
             output = pd.DataFrame({
                 'time_bin_end [s]': end_bins,
@@ -213,6 +210,6 @@ for dirname in folders:        # dirname of inmput folder. One folder is one con
                 'ncells_max_t': total_counts_t,
                 'probability_max_r': activated_counts_r/total_counts_r,
                 'probability_max_t': activated_counts_t/total_counts_t})
-            output.to_csv(dirname + '\contact_probability_max_t.csv')
+            output.to_csv(dirname + '/' + date + '_contact_probability_max_t.csv')
         else:
             print('No valid \'feature\' input!')

@@ -37,25 +37,23 @@ INPUT
         2) analysis
             Analyse the segmented regions, detect signaling event and output information for each cell. 
         3) plotting
-            Takes the "analysis" output, resturtures it for easier visualisation and adds some additional interaction features. 
+            Takes the "analysis" output, restructures it for easier visualisation and adds some additional interaction features. 
 
 OUTPUT
     - various tif stacks of the filtered and segmented channels. 
-    - .csv files for a time-independent cell cummary ("*_cell_summary.csv"), a time-dependent cell summary ("*_cell_results.csv"), and a time-dependent contact summary ("*_contact_results.csv")
+    - .csv files for a time-independent cell cummary ("*_cell_summary_plot.csv"), a time-dependent cell summary ("*_cell_results_plot.csv"), and a time-dependent contact summary ("*_contact_results_plot.csv")
 
-Last edited 18/01/2022
+Last edited 19/05/2022
 """
 
 ### USER SETTINGS
 
 ### Input Settings
-channel = {'cellmask': 2, 'bilayer':1, 'calcium':0}  # Dictioanry. Change numbers to match channel order in tif stack. Start counting at 0
-#channel = {'cellmask': 1, 'bilayer':0, 'calcium':2}
+channel = {'cellmask': 2, 'bilayer':1, 'calcium':0}  # Dictionary. Change numbers to match channel order in tif stack. Start counting at 0
 id_stack = 'timelapse' 
 id_flatfield = 'illumination'
 confine_CCZ = True   # set True if only contacts within segmented cell membrane areas should be considered. Otherwise in time connected contacts will be added.
-redo_seeds = False   # set to True if the cell seeds should be calculated again; otherwise an already present file will be used. 
-remove_lin_bg = "linear" # CellMask can cause the background to increase over time. Choose from "None", "linear", and "1st_order" for background correction.
+redo_seeds = False   # set to True if the cell seeds should be calculated again; otherwise an already present file will be used (same filename as input tif stack but ending "_cell_markers.tif"). 
 
 ### Acquisition Parameters
 bitdepth = 16                   # camera bit depth. images in flat-field stack will be excluded if they are overexposed.
@@ -65,26 +63,26 @@ time_interval = 2               # s ; time interval between frames in tif stack
 
 ### Segmentation Parameters
 cell_radius = 25
-psf_radius = 1.5 #1.18               # px ; used as lowpass filter cutoff
-LoG_sigma = 1.5#2.36                # px ; sigma for Gaussian blur before Lalpace filter.
+psf_radius = 1.5                # px ; used as lowpass filter cutoff
+LoG_sigma = 1.5                 # px ; sigma for Gaussian blur before Lalpace filter.
 n_rb = 3                        # frames ; number of frames to average with rolling ball average in time
-cell_thresh = 2000 #1800          # AU ; threshold of DoG filter for CellMask segmentation
-contact_thresh_low = 2.5 #2.5        # 2 # x-fold of signal standard deviation outside cellmask ; Will be used as 0 + contact_thresh_low*std for the lower threshold of hysteresis thresholding of close contact zones. 
-contact_thresh_high = 4 #4.5       # 4 # x-fold of signal standard deviation outside cellmask ; Will be used as 0 + contact_thresh_low*std for the upper threshold of hysteresis thresholding of close contact zones.
-gauss_thresh = 2.5 #3                # x-fold of signal standard deviation outside cellmask ; Will be used as mean + gauss_thresh*std for thresholding of big close contact zones.
+cell_thresh = 2000              # AU ; threshold of DoG filter for CellMask segmentation
+contact_thresh_low = 2.5        # 2 # x-fold of signal standard deviation outside cellmask ; Will be used as 0 + contact_thresh_low*std for the lower threshold of hysteresis thresholding of close contact zones. 
+contact_thresh_high = 4         # 4 # x-fold of signal standard deviation outside cellmask ; Will be used as 0 + contact_thresh_low*std for the upper threshold of hysteresis thresholding of close contact zones.
+gauss_thresh = 2.5              # x-fold of signal standard deviation outside cellmask ; Will be used as mean + gauss_thresh*std for thresholding of big close contact zones.
 cell_min_area = 6               # px ; minimum size of CellMask signal per frame. 6 px for FWHM of diffraction limited microvillus (70 - 150 nm).
 contact_min_volume = 12         # px ; minimum (x,y,t) volume size of detected close contact zones. E.g. for contacts with a min area of 6 px to be present in two consecutive frames set to 12
+remove_lin_bg = "linear"        # CellMask can cause the background to increase over time. Choose from "None", "linear", and "1st_order" for background correction.
 
 ### Analysis Parameters
 tmin_noCa = 30                  # s ; time for a cell that has not Ca triggerred to have CCZ formed to be "good" and valid for further analysis. 
 max_speed = 0.15                # um/s ; threshold of cell movement to define adhered cell
-min_gradient = 0.3 #0.05             # /s ; threshold for intensity gradient to define Ca spike
-min_height = 2.5                  # min height of calcium spike relative to baseline estimate
-min_width =  5 #10                 # s ; min width of calcium spike in s
+min_gradient = 0.3              # /s ; threshold for intensity gradient to define Ca spike
+min_height = 2.5                # min height of calcium spike relative to baseline estimate
+min_width =  5                  # s ; min width of calcium spike in s
 trace_smoothing = 20            # s ; gaussian filter for smoothing Ca and displacement traces
 min_track_length = 10           # s ; minimum number of time a cell has to be detected (=min_track_length/time_interval frames)
-QC = ['good', 'good_noCa']      # list of QC conditions that will be further investigated. Possible options: 'good', 'good_noCa',       'border_before_Ca', 'border_before_CCZ'. 
-                                # Needs to be updated to actually do smth if changed. 
+QC = ['good', 'good_noCa']      # list of QC conditions that will be further investigated when running "plotting". Possible options: 'good', 'good_noCa' 
 plot_smoothing = 20             # s ; smoothing windows for lineplots of timetraces
 
 
@@ -102,15 +100,15 @@ import datetime
 import os
 
 # Custom functions
-from gui import contactanalysisGui
-from segmentation import segmentation
-from analysis import analysis
-from plotting import plotting, plot_Ca_traces
+from gui import CA2D_gui
+from segmentation import CA2D_segmentation
+from analysis import CA2D_analysis
+from plotting import CA2D_plotting, CA2D_plot_Ca_traces
 
 # MAIN
 
 # have user input list of folder and tick which part of the program to run
-[folders, programs] = contactanalysisGui([id_stack, id_flatfield])
+[folders, programs] = CA2D_gui([id_stack, id_flatfield])
 print(str(len(folders)) + ' condition(s) selected. Lets get to work!\n')
 
 for i_folder in folders:        # one folder is one condition
@@ -128,7 +126,7 @@ for i_folder in folders:        # one folder is one condition
     for index, i_file in sel_files.iterrows():
         if programs['segmentation']:
             print(' Working on file ' + str(i_file.folder))
-            image_raw, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_CCZ_corr = segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_thresh, cell_min_area, LoG_sigma, n_rb, contact_thresh_high, contact_thresh_low, gauss_thresh, confine_CCZ, contact_min_volume, redo_seeds, remove_lin_bg)
+            image_raw, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_CCZ_corr = CA2D_segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_thresh, cell_min_area, LoG_sigma, n_rb, contact_thresh_high, contact_thresh_low, gauss_thresh, confine_CCZ, contact_min_volume, redo_seeds, remove_lin_bg)
             
         if programs['analysis']:
             if not programs['segmentation']:
@@ -144,10 +142,7 @@ for i_folder in folders:        # one folder is one condition
                 image_CCZ_corr = np.array(io.imread(i_file[id_stack][:-4] + '_SLB_flatfield-corrected.tif'), dtype = np.int32)
 
             analysis_parameters = [cell_radius, min_gradient, trace_smoothing, time_interval, min_height, min_width, pixel_size, max_speed, min_track_length, tmin_noCa]
-            cell_summary, cell_results, contact_results = analysis(i_file, cell_summary, cell_results, contact_results, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_raw[:,:,:,channel['calcium']], image_CCZ_corr, analysis_parameters)
-            contact_results.to_csv(dirname + '/contact_results.csv')
-            cell_results.to_csv(dirname + '/cell_results.csv')
-            cell_summary.to_csv(dirname + '/cell_summary.csv')
+            cell_summary, cell_results, contact_results = CA2D_analysis(i_file, cell_summary, cell_results, contact_results, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_raw[:,:,:,channel['calcium']], image_CCZ_corr, analysis_parameters)
             contact_results.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_contact_results.csv')
             cell_results.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_results.csv')
             cell_summary.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_summary.csv')
@@ -164,21 +159,18 @@ for i_folder in folders:        # one folder is one condition
         cell_results_plot = pd.DataFrame()
         contact_results_plot = pd.DataFrame()
         for iq in QC:
-            cell_summary_plot_t, cell_results_plot_t, contact_results_plot_t = plotting(cell_results, cell_summary, contact_results, iq, plot_smoothing/time_interval, pixel_size)
+            cell_summary_plot_t, cell_results_plot_t, contact_results_plot_t = CA2D_plotting(cell_results, cell_summary, contact_results, iq, plot_smoothing/time_interval, pixel_size)
             cell_summary_plot_t['condition'] = condition
             cell_results_plot_t['condition'] = condition
             contact_results_plot_t['condition'] = condition
             cell_summary_plot = cell_summary_plot.append(cell_summary_plot_t)
             cell_results_plot = cell_results_plot.append(cell_results_plot_t)
             contact_results_plot = contact_results_plot.append(contact_results_plot_t)
-        cell_summary_plot.to_csv(dirname + '/cell_summary_plot.csv')
-        cell_results_plot.to_csv(dirname + '/cell_results_plot.csv')
-        contact_results_plot.to_csv(dirname + '/contact_results_plot.csv')
         cell_summary_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_summary_plot.csv')
         cell_results_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_cell_results_plot.csv')
         contact_results_plot.to_csv(dirname +'/' + datetime.datetime.now().strftime("%Y%m%d") + '_contact_results_plot.csv')
         print('    - Generating signaling plots')
-        Ca_fig = plot_Ca_traces(cell_summary_plot, cell_results_plot, trace_smoothing//time_interval)
+        Ca_fig = CA2D_plot_Ca_traces(cell_summary_plot, cell_results_plot, trace_smoothing//time_interval)
         Ca_fig.savefig(dirname + '/Signaling_traces.pdf', dpi = 300)
 
     # save parameters and date

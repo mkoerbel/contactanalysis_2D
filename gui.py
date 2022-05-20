@@ -44,7 +44,7 @@ def get_filenames(dirname, folder_ids):
                                     'folder': dirname + '/' + dir.name}, ignore_index=True)
     return sel_files
 
-def contactanalysisGui(folder_ids):
+def CA2D_gui(folder_ids):
     gui_list = []
     folder_list = []
     programs = {}

@@ -15,9 +15,6 @@ import pandas as pd
 import os.path
 from scipy import ndimage, optimize
 from skimage import filters, morphology, feature, io, measure, segmentation
-from skimage import morphology
-from skimage import feature
-from skimage import io
 from skimage.io._plugins import tifffile_plugin as tf
 
 
@@ -303,7 +300,7 @@ def contactanalysis_big(image, labels, sigma, n_rb, thresh_std, gauss_thresh, co
 
     return exclusion_labels, accummulation_labels, image_div
 
-def segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_thresh, cell_min_area, LoG_sigma, n_rb, contact_thresh_high, contact_thresh_low, gauss_thresh, confine_CCZ, contact_min_volume, redo_seeds, remove_lin_bg):
+def CA2D_segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_thresh, cell_min_area, LoG_sigma, n_rb, contact_thresh_high, contact_thresh_low, gauss_thresh, confine_CCZ, contact_min_volume, redo_seeds, remove_lin_bg):
     # load tif file
     print('    - Starting image segmentation')
     image_raw = np.array(io.imread(i_file.timelapse), dtype = np.int32)
@@ -320,7 +317,7 @@ def segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_
     image_CZ_labels = small_regions2cell_watershed(image_CZ_bin, image_CZ_labels, 2*cell_radius)
     # save CZ image stacks
     print('       - Saving Contact Zone images') 
-    tf.imsave(i_file.timelapse[:-4] + '_CZ_bin.tif', image_CZ_bin.astype(np.uint8))
+    #tf.imsave(i_file.timelapse[:-4] + '_CZ_bin.tif', image_CZ_bin.astype(np.uint8))
     tf.imsave(i_file.timelapse[:-4] + '_CZ.tif', image_CZ_labels.astype(np.uint8))
     
     # Analyse Close Contact Zones (CCZ)
@@ -339,7 +336,7 @@ def segmentation(i_file, channel, bias, bitdepth, cell_radius, psf_radius, cell_
     print('       - Saving Close Contacts Zones detected')
     tf.imsave(i_file.timelapse[:-4] + '_SLB_flatfield-corrected.tif', image_CCZ_corr.astype(np.uint32))
     tf.imsave(i_file.timelapse[:-4] + '_CCZ_exc.tif', image_CCZ_exclusion.astype(np.uint8))
-    tf.imsave(i_file.timelapse[:-4] + '_CCZ_acc.tif', image_CCZ_accummulation.astype(np.uint8))
+    #tf.imsave(i_file.timelapse[:-4] + '_CCZ_acc.tif', image_CCZ_accummulation.astype(np.uint8))
     tf.imsave(i_file.timelapse[:-4] + '_CCZ_filt.tif', image_CCZ_filt.astype(np.uint32))
 
     return image_raw, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_CCZ_corr

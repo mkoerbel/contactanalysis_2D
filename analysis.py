@@ -245,7 +245,7 @@ def analyse_contacts(contact_results, i_file, i_cell, i_frame, i_CCZ_start, i_CC
 
     return contact_results, i_CCZ_start, i_CCZ_end, image_CCZ_times
 
-def analysis(i_file, cell_summary, cell_results, contact_results, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_raw_signal, image_CCZ_corr, parameters):
+def CA2D_analysis(i_file, cell_summary, cell_results, contact_results, image_CZ_labels, image_CCZ_exclusion, image_CCZ_accummulation, image_raw_signal, image_CCZ_corr, parameters):
     '''
     1 loop over cell
     2 analyse Ca and adhesion 
