@@ -14,7 +14,14 @@ The code has been tested on Windows 10 with an Intel i7-7700K CPU and 32 GB RAM.
 
 Installation (on Windwos, about 10 min):
 
-Install Python 3 (www.python.org, tested with Python 3.8). Create a virtual envirnment by running `python -m venv /path/to/new/virtual/environment` (the `python` commnad might have to be adjusted based on your Python installation, often to `python3`) and activate it by `/path/to/new/virtual/environment/Scripts/activate.bat` in the terminal. Once activated, install the required packages via pip (21.3.1) to you virtual environment via `pip install numpy pandas matplotlib scipy scikit-image seaborn`:
+If you are familiar with Python and have a working installation, jump to step 5 or make your own virtual environment and install the dependencies listed below. 
+1. Download the Python 3 installer (.exe, www.python.org, tested with Python 3.8 and 3.9. 3.11 is not recommended, installation of scikit-image fails). 
+2. Install Python. Check "Add to PATH". 
+3. Open a command prompt window. (To test the Python installation, type `python`. You should see the command line starting with `>>>` and you could start typing Python code. Leave this mode with `exit()`.)
+4. Navigate to the folder you want the new virtual environment to be built in, e.g. `cd C:\Users\Me\Documents\Contactanalysis`. Change `Me` to your user name.
+5. Create a virtual environment called `env` in the folder by running `python -m venv \env`. The `python` commmad might have to be adjusted based on your Python installation, often to `python3`. You should now have a folder `C:\Users\Me\Documents\Contactanalysis\env`. 
+6. Activate your new virtual environment by typing `\env\Scripts\activate.bat` in the terminal. 
+7. Once activated (If you have done steps 1-4 the command line will start with `(env) C:\Users\Me\Documents\Contactanalysis>`), install the required packages via pip (21.3.1) to your virtual environment via `pip install numpy pandas matplotlib scipy scikit-image seaborn`:
 
 Package dependencies (tested with the versions in brackets):
 
@@ -33,7 +40,10 @@ The following files are needed to run the analysis:
 - analysis.py 
 - plotting.py
 
-With the virtual environment active, `python main.py` to run. 
+Runing the code:
+
+1. Download and extract all the files in contactanalysis_2D. 
+2. In the command prompt, with the virtual environment active, navigate to the folder where you extracted the files and run `python main.py`. The GUI to select folders (see below) will appear. 
 
 ## 2. Using the GUI and output
 
