@@ -105,7 +105,9 @@ Needed is an input folder with multi-color tif stacks where one channel imaged t
 
 ## 4. Citation
 
-Please consider citing the corresponding paper when using contactanalysis_2D in your work. 
+Please cite the corresponding paper when using contactanalysis_2D in your work:
+
+Jenkins, E., Körbel, M., O’Brien-Ball, C. et al. Antigen discrimination by T cells relies on size-constrained microvillar contact. Nat Commun 14, 1611 (2023). https://doi.org/10.1038/s41467-023-36855-9
 
 ## 5. Troubleshooting
 
